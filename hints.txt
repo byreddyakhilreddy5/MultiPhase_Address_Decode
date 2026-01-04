@@ -64,3 +64,67 @@ Implementation Approach
 7. Handle reset correctly - initialize previous cycle state appropriately
 8. Reset value of cs_out should be 4'hF
 
+================================================================================
+Bare Bones Verilog Structure
+================================================================================
+
+Here is the basic structure you need to implement:
+
+// Internal signals
+reg [3:0] cs_phase_d;  // Previous cycle's cs_phase (all 4 bits)
+wire [3:0] cs_phase;   // Current cs_phase (concatenate from inputs)
+wire [4:0] case_sel;   // 5-bit case selector: {cs_phase_d[3], cs_phase}
+reg [3:0] invert_phase; // Which phases to invert (4 bits: P3, P2, P1, P0)
+wire [13:0] addr_P0_proc, addr_P1_proc, addr_P2_proc, addr_P3_proc;
+
+// Concatenate current cs signals
+assign cs_phase = {cs_P3, cs_P2, cs_P1, cs_P0};
+
+// Create 5-bit case selector
+assign case_sel = {cs_phase_d[3], cs_phase};
+
+// Combinational logic: Determine which phases to invert
+always_comb begin
+    case (case_sel)
+        // TODO: Add all 11 truth table cases here
+        // Each case maps to a 4-bit invert_phase value
+        // Example: 5'b01111: invert_phase = 4'b0001; // Invert P0 only
+        default: invert_phase = 4'b0000; // No inversion
+    endcase
+end
+
+// Apply inversions to addresses
+assign addr_P0_proc = invert_phase[0] ? ~address_P0 : address_P0;
+assign addr_P1_proc = invert_phase[1] ? ~address_P1 : address_P1;
+assign addr_P2_proc = invert_phase[2] ? ~address_P2 : address_P2;
+assign addr_P3_proc = invert_phase[3] ? ~address_P3 : address_P3;
+
+// Sequential logic: Register outputs and update state
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        // Asynchronous reset
+        addr_out <= 56'b0;
+        cs_out <= 4'hF;  // Reset to all 1s
+        cs_phase_d <= 4'b1111;  // Initialize previous cycle state
+    end else begin
+        // Register outputs (concatenate P3 to P0, MSB to LSB)
+        addr_out <= {addr_P3_proc, addr_P2_proc, addr_P1_proc, addr_P0_proc};
+        cs_out <= cs_phase;
+        
+        // Update previous cycle state
+        cs_phase_d <= cs_phase;
+    end
+end
+
+================================================================================
+Key Implementation Notes
+================================================================================
+
+- The case_sel is 5 bits: {prev_cs_P3, cs_P3, cs_P2, cs_P1, cs_P0}
+- The invert_phase is 4 bits: {invert_P3, invert_P2, invert_P1, invert_P0}
+- Each bit in invert_phase controls whether to invert that phase's address
+- You must implement all 11 cases from the truth table (lines 188-200 in Specification.md)
+- The default case handles all unlisted combinations (no inversion)
+- Reset initializes cs_phase_d to all 1s (important for wraparound logic)
+- Reset sets cs_out to 4'hF (all 1s), not 4'b0
+
