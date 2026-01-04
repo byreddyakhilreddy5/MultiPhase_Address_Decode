@@ -1,5 +1,5 @@
 import cocotb
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import RisingEdge, FallingEdge, Timer
 from cocotb.clock import Clock
 import random
 
@@ -229,9 +229,11 @@ async def test_addr_decode_registered(dut):
             (cs[0] << 0)
         )
 
-        # Wait 1 clock cycle for registered output to appear
-        # Outputs are registered, so they appear one cycle after inputs
+        # Wait for first clock edge to sample inputs
         await RisingEdge(dut.clk)
+        # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+        await Timer(1, unit="ns")  # Small delay
+        await FallingEdge(dut.clk)  # Check at falling edge
 
         # Check outputs one cycle after inputs were applied
         assert dut.addr_out.value.to_unsigned() == expected_addr_out, (
@@ -308,7 +310,11 @@ async def test_cs_p3_to_cs_p0_wraparound(dut):
     dut.cs_P2.value = cs[2]
     dut.cs_P3.value = cs[3]
     
+    # Wait for first clock edge to sample inputs
     await RisingEdge(dut.clk)
+    # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+    await Timer(1, unit="ns")  # Small delay
+    await FallingEdge(dut.clk)  # Check at falling edge
     
     # Verify the constraint was satisfied (cs_out[0] is cs_P0)
     cs_out_value = dut.cs_out.value.to_unsigned()
@@ -424,7 +430,11 @@ async def test_address_inversion_logic(dut):
     dut.cs_P2.value = cs[2]
     dut.cs_P3.value = cs[3]
     
+    # Wait for first clock edge to sample inputs
     await RisingEdge(dut.clk)
+    # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+    await Timer(1, unit="ns")  # Small delay
+    await FallingEdge(dut.clk)  # Check at falling edge
     
     # Check outputs
     # After dummy cycle, cs_phase_d = {1,1,1,1}, so prev_cs_p3 = 1
@@ -469,7 +479,11 @@ async def test_address_inversion_logic(dut):
     dut.cs_P2.value = cs[2]
     dut.cs_P3.value = cs[3]
     
+    # Wait for first clock edge to sample inputs
     await RisingEdge(dut.clk)
+    # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+    await Timer(1, unit="ns")  # Small delay
+    await FallingEdge(dut.clk)  # Check at falling edge
     
     exp_addr = calculate_expected_addresses(addr, cs, prev_cs_p3=prev_cs_p3)
     expected_addr_out = (
@@ -513,7 +527,11 @@ async def test_address_inversion_logic(dut):
     dut.cs_P2.value = cs[2]
     dut.cs_P3.value = cs[3]
     
+    # Wait for first clock edge to sample inputs
     await RisingEdge(dut.clk)
+    # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+    await Timer(1, unit="ns")  # Small delay
+    await FallingEdge(dut.clk)  # Check at falling edge
     
     exp_addr = calculate_expected_addresses(addr, cs, prev_cs_p3=prev_cs_p3)
     expected_addr_out = (
@@ -556,7 +574,11 @@ async def test_address_inversion_logic(dut):
     dut.cs_P2.value = cs_cycle1[2]
     dut.cs_P3.value = cs_cycle1[3]
     
+    # Wait for first clock edge to sample inputs
     await RisingEdge(dut.clk)
+    # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+    await Timer(1, unit="ns")  # Small delay
+    await FallingEdge(dut.clk)  # Check at falling edge
     
     # Check first cycle: address_P3 should be inverted
     exp_addr_cycle1 = calculate_expected_addresses(addr_cycle1, cs_cycle1, prev_cs_p3=prev_cs_p3)
@@ -593,7 +615,11 @@ async def test_address_inversion_logic(dut):
     dut.cs_P2.value = cs_cycle2[2]
     dut.cs_P3.value = cs_cycle2[3]
     
+    # Wait for first clock edge to sample inputs
     await RisingEdge(dut.clk)
+    # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+    await Timer(1, unit="ns")  # Small delay
+    await FallingEdge(dut.clk)  # Check at falling edge
     
     # Check second cycle: address_P0 should be inverted due to prev cs_P3=0
     exp_addr_cycle2 = calculate_expected_addresses(addr_cycle2, cs_cycle2, prev_cs_p3=prev_cs_p3_cycle2)
@@ -736,7 +762,11 @@ async def test_specification_truth_table(dut):
             (exp_addr[0] << 0)
         )
         
+        # Wait for first clock edge to sample inputs
         await RisingEdge(dut.clk)
+        # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+        await Timer(1, unit="ns")  # Small delay
+        await FallingEdge(dut.clk)  # Check at falling edge
         
         # Verify outputs match expected
         assert dut.addr_out.value.to_unsigned() == expected_addr_out, (
@@ -831,7 +861,11 @@ async def test_default_case_no_inversion(dut):
     dut.cs_P2.value = cs[2]
     dut.cs_P3.value = cs[3]
     
+    # Wait for first clock edge to sample inputs
     await RisingEdge(dut.clk)
+    # Small delay, then check at falling edge for signals to settle (registered outputs appear)
+    await Timer(1, unit="ns")  # Small delay
+    await FallingEdge(dut.clk)  # Check at falling edge
     
     # Default case: no inversions, addresses should pass through unchanged
     expected_addr_out = (
