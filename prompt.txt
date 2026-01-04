@@ -1,0 +1,58 @@
+Code completion task:
+
+Complete the given partial SystemVerilog RTL code based on the specification ./docs/Specification.md. The RTL code should be synthesizable.
+
+Multi-Phase Address Decode and Concatenation:
+
+This module processes a 4-phase address and chip-select interface. Each address phase is conditionally inverted based on all-ones detection and chip-select conditions, then concatenated into outputs.
+
+Address Decoding Rules:
+- For each phase Pi, detect if the address is all-ones: address_Pi == 14'b11111111111111
+- Address is NOT inverted if and only if: (address_Pi == all_ones) AND NOT (cs_prev[Pi] AND cs_Pi)
+- Address IS inverted in all other cases (bitwise inversion of all 14 bits)
+
+Output Concatenation:
+- addr_out[55:0] = {addr_P3, addr_P2, addr_P1, addr_P0} where each addr_P* is the processed 14-bit address
+- cs_out[3:0] = {cs_P3, cs_P2, cs_P1, cs_P0}
+
+Key Points:
+- All logic is combinational (no clocking or state storage)
+- Each phase is processed independently
+- Use generate loop to process all 4 phases
+- Address inversion is bitwise across all 14 bits
+
+Partial RTL code:
+```
+`timescale 1ns/1ps
+module addr_decode (
+    // Address per phase
+    input  wire [13:0] address_P0,
+    input  wire [13:0] address_P1,
+    input  wire [13:0] address_P2,
+    input  wire [13:0] address_P3,
+
+    // CS per phase
+    input  wire        cs_P0,
+    input  wire        cs_P1,
+    input  wire        cs_P2,
+    input  wire        cs_P3,
+
+    // Outputs
+    output wire [55:0] addr_out,   // concatenated processed address
+    output wire [3:0]  cs_out      // concatenated CS
+);
+
+    // Insert internal signal declarations
+    
+    // Implement multi-phase address decode logic:
+    // 1. Declare internal arrays for addresses, chip-selects, and processed addresses
+    // 2. Map input ports to internal arrays
+    // 3. Compute previous phase chip-selects (cs_prev)
+    // 4. Use generate loop to process each phase:
+    //    a. Detect all-ones condition for each address
+    //    b. Apply conditional inversion based on all-ones and CS conditions
+    // 5. Concatenate processed addresses: {P3, P2, P1, P0} into addr_out[55:0]
+    // 6. Concatenate chip-selects: {P3, P2, P1, P0} into cs_out[3:0]
+    
+endmodule
+```
