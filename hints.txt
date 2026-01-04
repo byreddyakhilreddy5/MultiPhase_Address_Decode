@@ -1,0 +1,66 @@
+IMPORTANT HINTS FOR MULTI-PHASE ADDRESS DECODE
+
+================================================================================
+CRITICAL: Address Inversion Logic
+================================================================================
+
+The address inversion logic is NOT based on simple OR gates combining individual 
+cs signals. The inversion pattern depends on the combination of previous cycle's 
+cs_P3 and the current cycle's cs signals.
+
+================================================================================
+Key Concepts to Understand
+================================================================================
+
+1. Wraparound Logic:
+   - The previous cycle's cs_P3 affects the current cycle's address_P0
+   - You need to track the previous cycle's cs_P3 value
+   - This creates a 5-bit decision space: {prev_cs_P3, cs_P3, cs_P2, cs_P1, cs_P0}
+
+2. Case-Based Logic:
+   - The inversion pattern cannot be determined by simple OR logic
+   - You need to use a case statement that maps the 5-bit selector to specific 
+     inversion patterns
+   - Each of the 11 truth table rows maps to a unique 4-bit inversion pattern
+
+3. State Tracking:
+   - Track the previous cycle's full cs_phase (all 4 cs signals)
+   - The previous cycle's cs_P3 (from cs_phase_d[3]) is used in the case selector
+   - Initialize the previous cycle register appropriately on reset
+
+4. Output Timing:
+   - All outputs are registered with 1-cycle latency
+   - Inputs are sampled on clock edge, outputs appear on the next clock edge
+   - Output concatenation order: {P3, P2, P1, P0} (MSB to LSB)
+
+================================================================================
+Common Mistakes to Avoid
+================================================================================
+
+❌ Using simple OR logic like: invert if (cs_P0 is low OR cs_P1 is low)
+❌ Only tracking cs_P3 instead of the full previous cycle's cs_phase
+❌ Missing the wraparound logic where previous cycle's cs_P3 affects current P0
+❌ Not implementing all 11 truth table cases
+❌ Forgetting the default case (no inversion for unlisted combinations)
+❌ Incorrect reset initialization of the previous cycle register
+
+✅ Study the truth table carefully - it shows exactly which combinations cause 
+   which inversions
+✅ Use a case statement with a 5-bit selector
+✅ Track the full previous cycle's cs_phase state
+✅ Implement all cases from the truth table plus a default case
+✅ Verify your case statement matches each row of the truth table exactly
+
+================================================================================
+Implementation Approach
+================================================================================
+
+1. Read the truth table in Specification.md (lines 188-200) carefully
+2. Notice that the case selector is 5 bits: previous cs_P3 + current cs_phase
+3. Each truth table row maps to a specific 4-bit inversion pattern
+4. Create a case statement that implements all 11 cases plus default
+5. Use the inversion pattern to conditionally invert each address phase
+6. Register all outputs with proper timing (1-cycle latency)
+7. Handle reset correctly - initialize previous cycle state appropriately
+8. Reset value of cs_out should be 4'hF
+
