@@ -93,11 +93,8 @@ always_comb begin
     endcase
 end
 
-// Apply inversions to addresses
-assign addr_P0_proc = invert_phase[0] ? ~address_P0 : address_P0;
-assign addr_P1_proc = invert_phase[1] ? ~address_P1 : address_P1;
-assign addr_P2_proc = invert_phase[2] ? ~address_P2 : address_P2;
-assign addr_P3_proc = invert_phase[3] ? ~address_P3 : address_P3;
+// inversion logic for based on the invert_phase
+// TODO: Add inversion logic
 
 // Sequential logic: Register outputs and update state
 always_ff @(posedge clk or negedge rst_n) begin
@@ -108,7 +105,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         cs_phase_d <= 4'b1111;  // Initialize previous cycle state
     end else begin
         // Register outputs (concatenate P3 to P0, MSB to LSB)
-        addr_out <= {addr_P3_proc, addr_P2_proc, addr_P1_proc, addr_P0_proc};
+        // TODO: Add logic to concatenate the adress as per specs
         cs_out <= cs_phase;
         
         // Update previous cycle state
